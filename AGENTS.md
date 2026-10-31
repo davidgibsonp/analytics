@@ -19,8 +19,11 @@ readable code over new code.
   dataframes and config values, and return dataframes or arrays.
 - **No notebooks.** Explore in `.py` files with `# %%` cells. Throwaway work goes in `scratch/`
   (git-ignored).
-- **No data or secrets in git.** Data lives in `data/` (git-ignored); keys come from the
-  environment (`.env.example` lists the names).
+- **No data or secrets in git; images only.** Raw snapshots live in `data/` and run outputs in
+  `analyses/*/outputs/` (both git-ignored). The only results committed are chart images in
+  `analyses/*/figures/`. Never commit parquet, csv, npz, pickles or API dumps; the one exception
+  is tiny synthetic fixtures in `tests/fixtures/`. Keys come from the environment (`.env.example`
+  lists the names).
 - **No new dependencies without asking the user.** Heavy ones go in an optional extra.
 - **Look at every chart you make.** Open the PNG and check labels, overlap and counts before
   reporting.
