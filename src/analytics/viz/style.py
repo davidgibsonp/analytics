@@ -7,11 +7,15 @@ past three, fold the rest into "Other" (see fold_categories).
 
 from __future__ import annotations
 
+import warnings
+from pathlib import Path
+
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import pandas as pd  # noqa: E402
+from PIL import Image  # noqa: E402  (installed with matplotlib)
 
 SURFACE = "#fcfcfb"
 TEXT = "#0b0b0b"
@@ -65,3 +69,19 @@ def finish(fig, ax, title: str, xlabel: str, ylabel: str, path, legend_columns: 
     fig.tight_layout()
     fig.savefig(path, facecolor=SURFACE)
     plt.close(fig)
+
+
+def optimize_png(path, max_kb: int = 1000) -> float:
+    """Shrink a PNG over max_kb in place by quantizing it to a 256-color palette. Median cut with
+    one k-means pass keeps flat fills, text and markers exact; only anti-aliased edge pixels move.
+    Returns the size in KB (a chart PNG typically drops to about a third); warns if it is still
+    over max_kb (then lower the chart's dpi or size)."""
+    path = Path(path)
+    if path.stat().st_size > max_kb * 1024:
+        with Image.open(path) as im:
+            small = im.convert("RGB").quantize(colors=256, method=Image.Quantize.MEDIANCUT, kmeans=1)
+        small.save(path, optimize=True)
+    kb = path.stat().st_size / 1024
+    if kb > max_kb:
+        warnings.warn(f"{path.name} is {kb:.0f} KB after quantizing, over max_kb = {max_kb}", stacklevel=2)
+    return kb
