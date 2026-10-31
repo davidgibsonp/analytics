@@ -14,10 +14,12 @@ import shutil
 import sys
 from pathlib import Path
 
-from analytics.config import ANALYSES_DIR, load_config
+from analytics.config import ANALYSES_DIR, load_config, load_env
 
 # source name -> "module:function". Each fetch function takes parsed CLI args.
-SOURCES: dict[str, str] = {}
+SOURCES: dict[str, str] = {
+    "linear": "analytics.sources.linear:fetch",
+}
 
 
 def analysis_dirs() -> list[Path]:
@@ -100,6 +102,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> None:
+    load_env()
     args = build_parser().parse_args(argv)
     args.func(args)
 

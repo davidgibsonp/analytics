@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import ast
 import json
+import os
 import tomllib
 from pathlib import Path
 from typing import Any
@@ -57,3 +58,14 @@ def load_config(path: Path | str, overrides: list[str] | None = None) -> dict:
 def save_run_config(cfg: dict, path: Path | str, **extra: Any) -> None:
     """Write the config a run used (plus any extra facts) as JSON next to its outputs."""
     Path(path).write_text(json.dumps({**cfg, **extra}, indent=2, default=str))
+
+
+def load_env(path: Path | str = REPO_ROOT / ".env") -> None:
+    """Load KEY=VALUE lines from .env into os.environ without overriding existing values."""
+    path = Path(path)
+    if not path.exists():
+        return
+    for line in path.read_text().splitlines():
+        key, sep, value = line.strip().partition("=")
+        if sep and key and not key.startswith("#"):
+            os.environ.setdefault(key.strip(), value.strip().strip("\"'"))

@@ -1,0 +1,15 @@
+{"data": {"issues": {"pageInfo": {"hasNextPage": false, "endCursor": null}, "nodes": [
+  {"identifier": "XYZ-1", "title": "Set up the research stack", "priority": 2, "priorityLabel": "High",
+   "estimate": 3, "createdAt": "2026-01-02T10:00:00.000Z", "updatedAt": "2026-01-05T10:00:00.000Z",
+   "startedAt": "2026-01-03T10:00:00.000Z", "completedAt": "2026-01-05T10:00:00.000Z", "canceledAt": null,
+   "archivedAt": null, "dueDate": "2026-01-10", "state": {"name": "Done", "type": "completed"},
+   "team": {"key": "XYZ", "name": "XYZ", "issueEstimationType": "tShirt"}, "project": {"name": "stack"},
+   "projectMilestone": {"name": "v0.1"}, "labels": {"nodes": [{"name": "Research"}, {"name": "Improvement"}]},
+   "assignee": {"name": "David"}, "parent": null, "cycle": {"number": 4}},
+  {"identifier": "ABC-7", "title": "Debrief - 2026-01-01", "priority": 0, "priorityLabel": "No priority",
+   "estimate": null, "createdAt": "2026-01-01T04:00:00.000Z", "updatedAt": "2026-01-01T05:00:00.000Z",
+   "startedAt": null, "completedAt": null, "canceledAt": null, "archivedAt": null, "dueDate": null,
+   "state": {"name": "Backlog", "type": "backlog"}, "team": {"key": "ABC", "name": "ABC", "issueEstimationType": "notUsed"},
+   "project": null, "projectMilestone": null, "labels": {"nodes": []}, "assignee": null,
+   "parent": {"identifier": "ABC-1"}, "cycle": null}
+]}}}
