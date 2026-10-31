@@ -38,3 +38,10 @@ Raw snapshot from `uv run analytics fetch linear`, one row per issue.
 - ABC is dominated by templated automation issues (`Debrief - <date>`, ~140 near-identical titles);
   they can swamp text analyses. Filter by `team` or labels when that matters.
 - Some titles are bare hashes (e.g. `ABC-62`) or single words, and carry no usable text.
+- The ABC template changed on 2026-06-16: `Daily debrief` (last 2026-06-14) became `Debrief - <date>`.
+- ABC delegate/capture items (labels Delegate, Braindump, Pocket, audio-summary; usually no project) are
+  about XYZ/MaiN work; ~45 titles name their target issue (`… → XYZ-910`), a usable ground truth.
+- Labels mix four families; split them before use: repo (`davidgibsonp/*`, bridges projects), work type
+  (Improvement/Feature/Documentation/Bug, unrelated to topic), origin (Braindump, Delegate, Pocket,
+  audio-summary, Debrief: how the issue arrived) and ritual (Retro, Day, rally, Salley-Digest, Reading).
+- Two issues (MAIN-21, MAIN-63) have no project, milestone, parent, repo label or shared title words.
