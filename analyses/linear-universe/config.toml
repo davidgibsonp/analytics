@@ -1,0 +1,192 @@
+# linear-universe. Override any value per run: uv run analytics run linear-universe --set galaxies.resolution=0.6
+# Relative paths resolve against this folder. Needs the graph extra: uv run --extra graph analytics run ...
+
+[paths]
+outputs = "outputs"              # git-ignored; copy chosen charts to figures/ to commit them
+
+[data]
+snapshot = "latest"              # data/raw/linear/issues/<snapshot>/; or a date, e.g. "2026-10-31"
+
+[tfidf]                          # identical to linear-issue-map's, so the title text matches its map
+text_fields  = ["title"]
+ngram_max    = 2
+min_df       = 2
+max_df       = 1.0
+sublinear_tf = true
+stop_words   = "english"
+
+[labels]
+repo_prefix = "davidgibsonp/"    # labels with this prefix name a repo (repo edges)
+
+[mentions]
+pattern = '\b(?:XYZ|ABC|MAIN)-\d+\b'   # an issue id in a title: links between galaxies, held-out check
+
+[edges]
+knn     = 10     # text neighbours per issue (title TF-IDF cosine), symmetrized
+min_cos = 0.2
+# Clique types (project, milestone, repo, sibling) give each member a total strength equal to the
+# weight from one group; text kNN is rescaled to mean strength 1; parent = weight per link.
+weights = { text_knn = 1.0, project = 1.0, milestone = 1.0, parent = 1.0, sibling = 0.5, repo = 0.5 }
+
+[hub]   # 'Capture & automation': built by rule, outside the graph
+project       = "debrief-pulse"     # this project ...
+team          = "ABC"               # ... plus every project-less issue of this team
+belt_pattern  = '^Debrief\s*[-–—]\s*\d{4}-\d{2}-\d{2}\s*$'
+daily_pattern = '^Daily( Debrief)?\s*[-–—]\s*\d{4}-\d{2}-\d{2}\s*$'
+min_delegated = 5                   # smaller 'Delegated → X' planets merge into 'Delegated → other'
+belt      = "Debrief – <date> template"
+daily     = "Daily debrief"
+pipeline  = "Debrief pipeline"
+delegated = "Delegated → {}"
+other     = "other"
+
+[galaxies]
+seeds      = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]   # Louvain runs in the consensus
+share      = 0.5     # issues co-assigned in at least this share of runs end up together
+resolution = 0.5     # Louvain on the human-issue graph
+min_size   = 40      # smaller communities are satellites: they join a galaxy by affinity or pin
+min_named  = 3       # groups smaller than this (no links at all) stay unassigned
+pin_ratio  = 1.25    # a satellite is a near-tie when best affinity < this x runner-up
+required_pins = ["camp"]   # pins the spec requires; every other pin applies only on a near-tie
+[galaxies.pins]      # satellite lead project -> project whose galaxy it joins
+camp            = "my-system"   # 1.20x: stack 0.0141 vs expedition 0.0118; titles are Camp-tool work
+denvoy-claude   = "my-system"   # 1.02x: expedition 0.0141 vs my-system 0.0139; titles are Denvoy setup
+
+[planets]
+seed       = 0
+resolution = 1.0     # Louvain inside each galaxy's own subgraph
+min_size   = 8       # smaller planets join their most-affine sibling planet
+max_size   = 50      # a bigger planet is split again on its own subgraph ...
+min_split_modularity = 0.2   # ... if that split reaches this modularity
+
+[lifecycle]          # statusType -> moon state; anything else is "open"
+completed = "done"
+canceled  = "dropped"
+duplicate = "dropped"
+
+[names]
+unassigned      = "Unassigned"
+mixed_suffix    = " (mixed)"
+no_project      = "no project"
+no_project_share = 0.2     # a galaxy's stats line lists "no project" when over this share has none
+milestone_share = 0.4      # a milestone names a planet when it covers this share
+label_share     = 0.6      # a ritual/workflow label names a planet when it covers this share
+project_share   = 0.5      # a project names a planet that is this pure and holds this share of it
+lead_share      = 0.4      # a galaxy theme applies only if its lead project holds this share
+mixed_cohesion  = 0.22     # mean title cosine to the planet centroid below this -> mixed_suffix
+terms_n         = 2        # contrast terms when nothing else names a planet
+term_pool       = 12
+width           = 30       # milestone names are shortened to this many characters
+generic_projects = ["other"]   # treated like no project when naming
+stop_terms      = ["add", "create", "update", "fix", "make", "use", "new", "set", "issue", "issues",
+                   "linear", "project", "projects", "repo", "run", "test", "build", "plan", "start"]
+[names.label_phrase]
+Retro          = "Cycle retros"
+Day            = "Stack days"
+rally          = "Rally days"
+Salley-Digest  = "Salley digests"
+Stack-Digest   = "Stack digests"
+Reading        = "Reading list"
+Opportunities  = "Opportunities"
+[names.galaxy_theme]   # lead project -> theme (checked against lead_share on every run)
+my-system     = "Personal OS"
+stack         = "Stack (day job)"
+expedition    = "Expedition & agents"
+salley        = "Salley & machines"
+sherpa        = "Career & reading"
+life          = "Life & game"
+autoresearch  = "Autoresearch"
+debrief-pulse = "Capture & automation"
+[names.override]       # derived planet name -> display name (ignored when the derived name changes)
+"cursor · rotate"       = "my-system upkeep"
+"agent · railway"       = "Denvoy & Hermes agents"
+"pocket · template"     = "Pocket & delegate capture"
+"chat backup · doppler" = "Porter & chat-backup"
+"aug · day"             = "Stack days & team ops"
+"internal · document"   = "DS team & Stack Internal"
+"ai · read"             = "Ideas, reads & job leads"
+"agent · agents"        = "Salley agents & memory"
+
+[recency]
+days       = 30      # 'new' = created within this many days of the snapshot's newest issue
+glow       = 0.5     # planets with at least this share of new issues glow ...
+glow_min_n = 6       # ... and at least this many issues (a glow on a 2-issue dot is noise)
+idle_days  = 60      # stalled = no new issue for this long and still open issues
+
+[checks]
+enabled         = false      # the validation suite below (minutes); metrics.json gets held_out + checks
+session_minutes = 5          # same-team issues created within this gap form a creation session
+subsample       = 0.9
+subsample_draws = [11, 12, 13, 14, 15]
+ablate          = ["text_knn", "parent", "sibling", "milestone", "project", "repo"]
+weak_cos        = 0.1        # a delegated item's text route is weak when its best centroid cosine is below this ...
+weak_margin     = 1.2        # ... or best / runner-up is below this
+
+[plot]
+width        = 18      # inches
+height       = 15
+dpi          = 150
+max_kb       = 1000    # the PNG is palette-quantized when bigger (pre-commit rejects files over 1,000 KB)
+moon_spacing = 1.0     # layout units between moons
+moon_size    = 0.62    # marker diameter as a share of moon spacing
+moon_noun    = "issues"
+planet_rim   = 0.7     # a planet disc reaches this many moon spacings past its outermost moon
+planet_pad   = 3.0     # gap between planets inside a galaxy (room for labels)
+repair_rounds = 12     # re-pack up to this many times, giving more room where a label found no free spot
+repair_step  = 1.5     # extra room (data units) around such a planet or galaxy per round
+repair_min   = 10      # a planet label miss this costly (a disc covered, a tip crowded, an unclear owner) gets room
+galaxy_pad   = 1.5     # rim between the outer planets and the galaxy edge
+ring_gap     = 6.5     # gap between the hub and the ring, and between ring neighbours
+ring_step    = 0.5     # the ring moves out by this much until its galaxies fit around the hub
+hub_gap      = 1.2     # gaps inside the hub (centre bodies, belt, delegated planets)
+stretch      = 1.05    # horizontal stretch of the ring (more makes the drawing width-bound)
+title_slot   = 46      # degrees of the ring kept free above the hub for its title
+belt_inner   = 4.5     # room between the hub centre bodies and the template belt
+margin       = 2.0     # data units around the outermost galaxy
+title_room   = 4.0     # data units above the top galaxy for its title
+glow_width   = 1.4
+link_min     = 3       # draw galaxy-to-galaxy links with at least this many issue links
+link_width   = [0.8, 5.0]   # link line width (points): base + this much more at the largest count
+label_min    = 6       # label every planet with at least this many issues
+hub_label_min = 2      # the hub has room: label its planets down to this size
+overlap_cost = 100     # label placement costs: a label overlapping another, or off the canvas ...
+disc_cost    = 10      # ... covering a planet disc (or crowding an arrow tip) ...
+galaxy_cost  = 3       # ... entering another galaxy's disc ...
+cross_cost   = 1       # ... crossing an arrow
+owner_cost   = 20      # a planet label another planet is about as near to as its own ...
+owner_margin = 0.5     # ... i.e. within its own gap + this many label heights
+outside_cost = 2       # a planet label that leaves its own galaxy's disc (a preference, never repaired:
+                       # growing rooms or rims for spills shrank the scale and did not converge)
+title_pad_px = 15      # planet labels keep this many pixels from other galaxies' name and stats lines ...
+keepout_cost = 10      # ... at the cost of covering a planet disc
+arrow_end_px = 30      # labels keep this many pixels from delegate arrow tips
+arrow_dash   = [1, 1.6]   # delegate arrow shaft dash pattern (points on, off); the head is solid
+arrow_lw     = 1.2
+arrow_head   = 12      # arrowhead mutation scale
+legend_glow  = 0.5     # legend glow swatch core radius, as a share of the legend handle height
+label_size   = 8
+label_gap    = 0.35    # planet labels start this far outside the planet disc (and glow) ...
+label_far    = 1.8     # ... then two more rings of label positions, each this much farther out
+stats_wrap   = 100     # characters per line of a galaxy's list of small planets
+stats_lift   = 0.4     # a galaxy's stats line sits this far above its rim ...
+stats_slide  = 2.5     # ... sliding along it in steps of this many data units ...
+stats_slides = 5       # ... up to this many steps each way when its spot is taken
+also_abbrev  = { "Delegated → " = "→ " }   # shortened after the first entry of that list
+galaxy_font  = 12.5
+stats_font   = 8.5
+frame_top    = 0.895   # labels stay below this figure fraction (the legend)
+axes_box     = [0.005, 0.03, 0.99, 0.845]   # left, bottom, width, height (figure fraction)
+title    = "Linear universe: {galaxies} galaxies, {planets} planets, {moons} issues"
+subtitle = "Galaxy = projects tied by sub-issues, milestones, repo labels and title words.  Planet = sub-topic, named by its milestone, project or ritual label where one fits.  Moon = issue."
+footnote = "Positions carry no metric meaning: the automation hub sits in the centre and the human galaxies are ordered around it so the most tied pairs are neighbours. {links}\nMethod: consensus of {runs} Louvain runs on one graph of human issues (title-text kNN, sub-issues, siblings, milestones, projects, repo labels); planets = Louvain inside each galaxy; hub items by rule, delegated items by nearest galaxy text. {unassigned}"
+footnote_unassigned = "{n} issues with no links at all ({ids}) are not drawn."
+footnote_no_links   = "No two human galaxies share {min}+ sub-issue or id-mention links (the most is {most}), so no lines join them."
+
+[legend]
+done    = "done"
+open    = "open"
+dropped = "canceled / duplicate"
+glow    = "glow = ≥{glow:.0%} created in last {days} days"
+pinned  = "dashed outline = pinned"
+links   = "sub-issue / id links between galaxies (width = count)"
+arrow   = "dotted arrow = automation items about that galaxy (number = items)"

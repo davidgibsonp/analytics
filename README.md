@@ -27,6 +27,7 @@ src/analytics/      shared library: config, CLI, sources/, features/, viz/
 analyses/<name>/    one folder per question: README (question → answer), config.toml, run.py
 analyses/_template/ copy this to start a new analysis
 docs/data/          data dictionaries, one per source
+docs/lessons.md     what was hard or notable so far: read before starting a new analysis
 data/               git-ignored raw snapshots (data/raw/<source>/<dataset>/<date>/)
 scratch/            git-ignored throwaway exploration
 tests/              fast tests on tiny fixtures
@@ -35,7 +36,8 @@ tests/              fast tests on tiny fixtures
 ## Dependencies
 
 Core: pandas, numpy, pyarrow, scikit-learn, duckdb, matplotlib, httpx.
-Optional extras: `embeddings` (sentence-transformers, pulls in PyTorch), `viz` (plotly).
+Optional extras: `graph` (networkx, for community detection), `embeddings` (sentence-transformers,
+pulls in PyTorch), `viz` (plotly).
 Dev: pytest, ruff, pre-commit.
 
 ## Checks

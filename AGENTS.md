@@ -7,14 +7,18 @@ readable code over new code.
 
 1. Read this file, then the README of the analysis you are working on.
 2. Read `docs/data/<source>.md` before inspecting a dataset; it lists columns, types and quirks.
+   Skim `docs/lessons.md` for harness and method pitfalls already paid for.
 3. Check `src/analytics/` for a function that already does the job. Reuse it.
 
 ## Rules
 
 - **One entry point.** Run things with `uv run analytics ...`. Do not add new runner scripts.
 - **Thin analyses.** An analysis is `README.md`, `config.toml`, `run.py` (aim for ~100 lines or
-  fewer), optionally `explore.py`, and committed `figures/`. Logic used by a second analysis moves
-  to `src/analytics/` (rule of two: not before).
+  fewer), optionally `explore.py`, and committed `figures/`. Anything generic (a chart type, a
+  clustering method) goes to `src/analytics/` with tests. Analysis-specific rules that don't fit in
+  ~100 lines may stay in `run.py` plus at most one sibling module (e.g. `checks.py` for a
+  validation suite); say why in the README. Logic used by a second analysis moves to
+  `src/analytics/` (rule of two: not before).
 - **Every tunable value goes in `config.toml`.** No magic numbers in code. Functions take
   dataframes and config values, and return dataframes or arrays.
 - **No notebooks.** Explore in `.py` files with `# %%` cells. Throwaway work goes in `scratch/`

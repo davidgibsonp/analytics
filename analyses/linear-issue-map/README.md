@@ -58,6 +58,8 @@ uv run analytics run linear-issue-map --set 'tfidf.text_fields=["title","labels"
 
 ## Next
 
+- **Done:** [linear-universe](../linear-universe/README.md) consolidates these clusters into galaxies and
+  planets using projects, milestones, labels and sub-issue links.
 - Add labels and project to the text to firm up the loose middle.
 - Exclude templated ABC debriefs (`--set 'filter.teams=["XYZ","MaiN"]'`) to see the rest more clearly.
 - Try semantic embeddings (`uv sync --extra embeddings`) once TF-IDF limits are clear.
