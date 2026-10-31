@@ -1,0 +1,8 @@
+# Every tunable value for this analysis. Override per run with --set section.key=value.
+# Relative paths resolve against this file's folder.
+
+[paths]
+outputs = "outputs"   # git-ignored
+
+[data]
+snapshot = "latest"   # or a date folder, e.g. "2026-10-31"
