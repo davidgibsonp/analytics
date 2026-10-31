@@ -1,0 +1,19 @@
+# Environments and secrets
+.venv/
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Data and run outputs never enter git
+data/
+analyses/*/outputs/
+scratch/*
+!scratch/README.md
+
+# Notebooks are not used here: explore in cell-based .py files (# %%)
+*.ipynb
+.ipynb_checkpoints/
+
+.DS_Store

@@ -1,0 +1,28 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.7.4
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+  - repo: local
+    hooks:
+      - id: no-notebooks
+        name: no notebooks (use cell-based .py files)
+        entry: notebooks are not committed here; use a .py file with "# %%" cells
+        language: fail
+        files: \.ipynb$
+      - id: no-data-files
+        name: no data files
+        entry: data files belong in data/ (git-ignored), not in git
+        language: fail
+        files: \.(parquet|npz|csv|feather|pkl)$
+        exclude: ^tests/fixtures/
