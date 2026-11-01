@@ -1,0 +1,233 @@
+# linear-expedition. Override any value per run: uv run --extra graph --extra viz analytics run linear-expedition --set terrain.time_sigma=2
+# Relative paths resolve against this folder. Reads linear-universe's outputs: run that analysis first.
+
+[paths]
+outputs  = "outputs"                     # git-ignored: tables, metrics, the interactive terrain3d.html
+figures  = "figures"                     # committed chart PNGs (each palette-quantized under figures.max_kb)
+universe = "../linear-universe/outputs"  # assignments.parquet (galaxy/planet per issue) + metrics.json (affinity)
+
+[data]
+snapshot = "latest"   # data/raw/linear/issues/<snapshot>/; or a date, e.g. "2026-10-31"
+timezone = "UTC"      # weeks run Monday 00:00 to Sunday in this zone (all timestamps are UTC in Linear)
+
+[states]              # statusType groups; everything else (backlog, unstarted, started, triage) is open
+done    = ["completed"]
+dropped = ["canceled", "duplicate"]
+
+[lanes]               # one lane per universe planet, grouped into ranges (= universe galaxies)
+hub         = "Capture & automation"   # this galaxy is Basecamp: logistics, its lanes go last
+basecamp    = "Basecamp"               # the range name Basecamp lanes carry
+delegated   = "Delegated → "           # Basecamp lanes with this prefix follow the range order of their target
+gap_lanes   = 1        # empty lanes between ranges (valleys), Basecamp included
+edge_lanes  = 1        # empty lanes before the first range and after Basecamp
+# Range order: the linear order of the 7 human galaxies with the largest summed universe affinity of
+# neighbours (the universe ring, opened at its weakest link). Ridge order inside a range: massif
+# (most completed issues in the middle, then alternating sides).
+
+[terrain]
+time_sigma   = 1.5        # Gaussian sigma in weeks
+lane_sigma   = 0.6        # Gaussian sigma in lanes, inside a range only (never across a gap lane)
+mode         = "reflect"  # edge handling: reflect keeps each range's total, so peaks are true counts
+basecamp_cap = 1.0        # Basecamp height = min(smoothed, this many issues per week): a low flat strip
+lead_weeks   = 3          # empty weeks before the first event (nothing existed then): a push in the first
+                          # weeks closes on bare ground instead of being cut flat against the axis start
+
+[camps]               # camps = cycles of this team; Linear's snapshot has no cycle dates
+team  = "XYZ"
+span  = [0.1, 0.9]    # a camp spans these quantiles of its completed members' completedAt ...
+# ... its week is the week of their median completedAt; its lane is the lane most of them sit on
+retro = '^Cycle (\d+)(?:\s*[–-]\s*(\d+))? retro'   # 'Cycle N retro' (or 'Cycle N–M retro') titles name the camp's retro
+
+[milestones]          # key = project + milestone; lane = the lane most of its issues sit on
+idle_days = 60        # stalled high camp: still open issues and no new issue for this many days at the snapshot
+summit_days = 7       # summits of one project within this many days of their group's first share a group:
+                      # one label on the 2D map, one pole with a pennant each on the 3D relief
+# summit: every issue done or dropped, at least one done; date = last completedAt
+# snapshot = the newest timestamp in the data (created, completed or canceled), so nothing happens after it
+
+[cairns]              # completed issues that later work points back to
+mention       = '[A-Z]+-\d+'   # an issue id in another issue's title (only ids that exist count)
+later_only    = true           # count a mention only when its issue was created after the target
+min_children  = 2              # a parent is a cairn with at least this many sub-issues (any state)
+retro_label   = "Retro"
+retro_bonus   = 1              # weight = inbound mentions + sub-issues + this, if Retro-labeled
+child_mentions = false         # a sub-issue naming its own parent in its title is already counted as a child
+kind_order    = ["mention", "parent", "retro"]   # kind = the part that adds most weight; ties go in this order
+# The daily debrief template is left out: "a cairn rebuilt on the same rock every day" (also linear-universe's hub patterns)
+templates     = ['^Debrief\s*[-–—]\s*\d{4}-\d{2}-\d{2}\s*$', '^Daily( Debrief)?\s*[-–—]\s*\d{4}-\d{2}-\d{2}\s*$']
+
+[index]               # cairn index per project and per range
+templates_in_traffic = false   # template issues count neither as traffic nor as cairns
+min_traffic     = 5            # a marking ratio over fewer completed issues is noise: left out of the thirds
+not_routes      = ["no project", "Basecamp"]   # listed, but never in the thirds: not routes (no project; logistics)
+parts           = 3            # thirds: busy = traffic at or above the (1 - 1/parts) quantile of routes;
+                               # barely marked = ratio (cairns / traffic) at or below the 1/parts quantile
+no_project      = "no project"
+
+# ------------------------------------------------------------------------------------- figures
+[figures]
+draw      = true               # false: tables and metrics only (no PNGs, no html)
+html      = true               # also write outputs/<html_name> (needs the viz extra: plotly); skipped with a note if missing
+map2d     = "map-2d.png"       # file names in paths.figures
+terrain3d = "terrain-3d.png"
+cairns    = "cairns.png"
+html_name = "terrain3d.html"   # in paths.outputs (6 MB with plotly inline: works offline, never committed)
+max_kb    = 1000               # PNGs over this are palette-quantized (pre-commit rejects files over 1,000 KB)
+cairn_ids = 5                  # cairns of at least this weight carry their issue id, on the map and the index
+
+[map2d]               # the plan view: analytics.viz.topo
+width      = 18       # inches
+height     = 11.2     # the map keeps 8.58 in for 55 lanes (a label is about one lane tall); 3 footnote lines
+dpi        = 150
+map_box    = [0.142, 0.099, 0.735, 0.766]  # left, bottom, width, height (figure fraction)
+side_box   = [0.887, 0.099, 0.068, 0.766]  # the cached-gear bars
+edge_pad   = 0.35     # weeks of air right of the snapshot edge
+upsample   = 8        # fine-grid points per lane and per week (PCHIP: no overshoot)
+levels     = [0.25, 0.5, 1, 1.5, 2, 3, 4]  # filled bands start here (issues / week); the last runs to the peak
+ramp       = [50, 100, 200, 300, 400, 500, 600]   # style.SEQUENTIAL steps, one per band (one hue, light -> dark)
+line_step  = 600      # contour lines: this step, thin and faint (recessive)
+line_width = 0.35
+line_alpha = 0.45
+status     = "warning"   # style.STATUS color of stalled high camps (tent + idle trail), the map's only hue
+flag_pt    = 11       # summit flag pole height (pt)
+tent_pt    = 9        # stalled tent half-width (pt)
+stone_pt   = 7        # cairn: bottom stone width (pt); one stone per doubling of weight (as on the 3D relief)
+legend_weights = [1, 4, 16]   # 1, 3 and 5 stones
+crack_pt   = 5
+crack_slide = 48      # pt: a crack slides at most this far along its lane to clear glyphs and other cracks
+band_alpha = [0.045, 0.02]   # camp bands, alternating
+side_label_min = 10   # gear bars this long carry their value
+side_ticks = [0, 10, 20]
+note_x     = 0.4      # weeks: where the Basecamp note starts
+font = { lane = 7, block = 8.5, label = 7, tag = 6.5, legend = 8.5, title = 17, subtitle = 10, footnote = 7.5 }
+title      = "The expedition map: {months} months of Linear work as terrain"
+subtitle   = "Elevation = issues completed per week (smoothed: σ {time_sigma:g} weeks, {lane_sigma:g} lanes, inside each range).  Ranges = the universe's galaxies, ridges = their planets, Basecamp = the automation hub.  {done} completed issues, {first_done:%d %b %Y} to {snapshot:%d %b %Y}."
+footnote   = "Camp band = {span0} to {span1} percentile of a cycle's completion dates.  Summit = milestone with every issue done or canceled (flag at its last completion; summits within {summit_days} days share a label).  Canceled includes duplicates throughout.\nStalled high camp = milestone with open issues and no new issue for {idle}+ days (tent at its last new issue; dotted trail = time since, while other issues may still close).  Crevasse = canceled issue.  Glyphs on one lane and day sit side by side (shifted by up to {shift_days} days; crevasses up to {crack_days}).\nCairn = completed issue that later work points back to; weight = later title mentions + sub-issues + {bonus} if Retro-labeled; one stone per doubling of weight; ids on cairns of weight ≥ {ids} (daily Debrief template excluded)."
+edge       = "snapshot\n{snapshot:%Y-%m-%d}"
+band_note  = "camps = {team} cycles"
+band_tag   = "C{cycle}"
+block_stats   = "{done} done · {open} open"
+basecamp_note = "capture & delegation logistics: height capped at {cap:g} issue / week, a flat strip"
+stalled_label = "{name} · no new issue {idle} d · {open} open"
+side_title = "cached gear"
+side_note  = "open issues at snapshot\n({total} on {lanes} lanes)"
+scale      = "issues completed / week"
+legend = { band = "camp ({team} cycle)", flag = "summit (milestone done)", tent = "stalled high camp", trail = "no new issue since", cairn = "cairn, weight {weights}: one stone per doubling", crack = "crevasse (canceled / duplicate)" }   # gear and the snapshot edge are labelled in place
+
+[terrain3d]           # the 3D relief: analytics.viz.relief (static PNG + interactive html)
+width  = 14           # inches
+height = 9.4
+dpi    = 150
+elev   = 37           # camera: looking from the snapshot edge back into the past
+azim   = -30
+box    = [2.6, 1.6, 0.42]   # x (weeks), y (lanes), z (height) box aspect
+target = [0.07, 0.085, 0.95, 0.865]   # figure box the projected terrain is fitted to
+label_edge = "x1"     # range labels along the snapshot edge ("x0": the first week)
+tick_edge  = "y0"     # month ticks along the front lane edge ("y1": the back)
+upsample      = 6     # PCHIP upsampling of the grid (monotone: passes the samples, never overshoots)
+html_upsample = 2
+html_scale    = 0.72  # plotly scene box scale
+ramp    = [25, 100, 250, 400, 550, 700]       # style.SEQUENTIAL steps of the height colormap ...
+ramp_at = [0.0, 0.08, 0.25, 0.5, 0.75, 1.0]   # ... at these fractions of the top of the scale
+contour_step   = 1.0  # issues / week between contour lines (baked into the texture; none on Basecamp)
+contour_shift  = 0.06 # a contour face sits this much further up the colour ramp (recessive, same hue)
+shade     = 0.25      # hillshade: a face turned from the light moves this x (its light deficit) up the colour ramp (one hue)
+valley_dash  = 1.0    # weeks: dashes of the valley lines on the floor between ranges (baked in, so ridges hide them)
+valley_alpha = 0.55   # how far a dash blends toward the baseline grey
+light_az  = 225       # light from the viewer's front-left, so visible slopes are lit
+light_alt = 40
+status    = "warning" # style.STATUS color of stalled high camps (as on the 2D map)
+max_shift_weeks = 3   # a crowded glyph slides along time at most this far; past it, it takes the least crowded spot
+label_gap  = 12       # px kept between range labels along the edge
+leader_min = 16       # px: a callout leader shorter than this reads as a stray tick (penalised)
+legend_width = 530    # px from the right edge for the legend block
+push_min  = 3         # a range whose poles carry this many pennants gets one callout naming its pushes
+stalled_callouts = 2  # callouts for this many longest-stalled camps (everything else: html hover)
+peak_callouts = 3     # then the tallest peak of each range with no callout yet, at most this many
+name_chars = 28       # a cairn callout names its issue by an override below or its title cut to this
+names = { "XYZ-712" = "game dev stack" }
+font = { title = 15.5, subtitle = 9.5, legend = 9, tick = 8.5, block = 10, callout = 8.5 }
+title    = "Expedition terrain: completed work as mountain ranges, {start:%b %Y} – {snapshot:%b %Y}"
+subtitle = "Height = issues completed per week on each planet's lane (smoothed): {done} completed issues on {lanes} lanes. Ranges\nare the {ranges} human galaxies of the Linear universe, split by empty valley lanes; Basecamp is the automation\nhub, a low strip capped at {cap:g} a week. Time runs from {start:%b %Y} at the back to the {snapshot:%b %-d, %Y} snapshot at the front (gray cut face)."
+basecamp = "Basecamp (automation)"
+scale    = "height: issues completed per week"
+callout_cairn  = "{id} {name}: the tallest cairn\n({children}, {mentions})"
+callout_push   = "{range}: {summits} summits in {pushes} pushes\n{list}"
+push_item      = "{names} in {date:%B}"
+callout_summit = "{name}"   # the pole standing highest outside the pushes
+callout_stalled = "{project} · {milestone}\nstalled: no new issue for {idle} days"
+callout_peak    = "{range} · {planet}\npeak: {peak:.1f} completed a week, {date:%b %Y}"
+shift = "Canceled includes duplicates. Crowded glyphs slide\nalong time by up to {shift_days} days."
+html_subtitle = "Height = issues completed per week per planet lane (smoothed). Ranges = the {ranges} human galaxies; Basecamp = automation hub, capped at {cap:g} a week.<br>Drag to rotate; hover for titles. Canceled includes duplicates."
+html_scale_label = "completed / week"
+gap = "valley between ranges"
+legend = { pole = ["Summit: milestone with every issue done or canceled", "pennants on one pole = summits within {summit_days} days"], cairn = ["Cairn: completed issue that later work points back to", "one stone per doubling of weight"], tent = ["Stalled high camp: milestone with open issues and", "no new issue for {idle}+ days (tent at the last one)"] }
+hover_summit = "<b>Summit</b>: {project} · {milestone}<br>{done} done, {dropped} canceled<br>last completed {date:%Y-%m-%d}"
+hover_cairn  = "<b>Cairn</b> {id}: {title}<br>{kinds} · weight {weight} ({mentions}, {subs}{retro_part})<br>{project} · completed {completedAt:%Y-%m-%d}"
+hover_tent   = "<b>Stalled high camp</b>: {project} · {milestone}<br>{open} open of {issues}; no new issue for {idle_days} days<br>last new issue {last_created:%Y-%m-%d}, last activity {date:%Y-%m-%d}"
+hover_camp   = "<b>Camp</b>: {team} cycle {cycle}<br>{start:%b %d} – {end:%b %d} · {done} done, {open} open<br>retro: {retro}"
+names_html = { pole = "summit (milestone done)", cairn = "cairn (later work points back)", tent = "stalled high camp (no new issue {idle}+ days)", route = "camps ({team} cycles, in order)" }
+
+[cairn_chart]         # the cairn index and trail register: analytics.viz.cairns (page in px)
+width   = 2100
+dpi     = 150
+margin  = 40
+unit    = 12          # stone width per unit of weight (px), both panels
+stone_h = 7           # stone height (px); stones sit gap px apart
+gap     = 2
+max_stones = 10       # a row draws at most this many stones (the heaviest), plus a '+N' tag
+row_min = 52          # minimum row height (two text lines)
+row_pad = 10          # air above the tallest cairn in a row
+show_routes = 13      # route rows shown before the smaller routes fold into one row
+small_named = 4       # projects named in the 'small projects' row
+traffic_px  = 3.2     # px per completed issue
+ratio_max   = 0.20    # the ratio strip runs 0 .. this; larger ratios are clipped with an arrow
+ratio_px    = 1300    # px per 1.0 of ratio
+ratio_tick  = 0.05
+bar_h   = 12
+dot     = 9           # ratio dot size (pt)
+legend_weights = [1, 5, 20]
+register_rows  = 12
+register_row_h = 38
+title_chars    = 60
+bar      = "#c9c7c0"  # neutral only: no hue anywhere in this chart
+bar_flag = "#52514e"
+band     = "#f1f0ec"
+shades  = { parent = "#3f3e3b", mention = "#85837d", retro = "#b5b3ac" }   # one neutral ramp, dark -> light
+font    = { title = 17, sub = 9.5, panel = 12.5, head = 8.5, name = 9.5, small = 8, id = 7.5 }
+columns = { name = 40, cairn = 480, bar = 640, ratio = 1230, pct = 1585, frac = 1597, note = 1745 }
+register_columns = { rank = 64, stone = 200, id = 338, title = 440, project = 1072, done = 1262, kind = 1384, mentions = 1700, subs = 1822, retro = 1915, weight = 2055 }
+title    = "Cairns: where later work points back"
+subtitle = "A cairn is a completed issue that later work points back to: a later issue names it in its title, it is the parent of ≥ {min_children} sub-issues, or it carries the {label} label.\nWeight = later title mentions + sub-issues + {bonus} if {label}. {n} cairns, total weight {weight}. The daily Debrief template is left out: a cairn rebuilt on the same rock every day."
+panel_a  = "(a)  Cairn index: how well each route is marked"
+rule     = "Route = a project with ≥ {min_traffic} completed issues. Busy = top {part} of routes by traffic (≥ {busy} done). Barely marked = bottom {part} by marking ratio (≤ {barely}). Unmarked busy route = both."
+legend_size = "Stone = one cairn.   Width ∝ weight:"
+legend_kind = "Shade = kind:"
+legend_ids  = "Ids mark stones of weight ≥ {weight}."
+legend_maps = "(The maps stack one stone per doubling instead.)"
+more        = "+{n}"
+kinds_legend = { parent = "parent tree (≥ {min_children} sub-issues)", mention = "mention target", retro = "retro" }
+kind_names   = { parent = "parent tree", mention = "mention target", retro = "retro" }
+heads = { name = ["project  ·  range", ""], cairn = ["cairns", "oldest at the bottom"], bar = ["traffic", "completed issues"], ratio = ["marking ratio", "cairns / traffic"] }
+fold_routes = "{n} smaller routes ({lo}–{hi} done each)"
+fold_small  = "{n} small projects (< {min_traffic} done each)"
+no_project_sub = "mostly {range}"
+section  = "not routes: listed, never flagged"
+none     = "no cairn"
+frac     = "{cairns} of {traffic}"
+flag     = "unmarked busy route"
+flag_note = "busy, yet {what} in {traffic} done"
+no_cairn = "no cairn"
+busy     = "busy ≥ {busy}"
+barely   = "barely marked ≤ {barely}"
+clip     = "▸ = above {max}"
+note_a   = "Hollow dots: totals over folded rows or rows that are not routes."
+note_range = "By range, the one unmarked busy range is {range}: {traffic} done, {cairns} cairns ({ratio}){tie}.   "
+note_tie   = { "11" = ", exactly on both cut-offs (borderline)", "10" = ", exactly on the busy cut-off", "01" = ", exactly on the barely-marked cut-off" }
+panel_b  = "(b)  Trail register: the {n} most-followed cairns"
+register_sub = "Ranked by weight; one line per cairn, its stone drawn to the scale of (a). Mentions = later issues that name it in their title (inbound); sub-issues = its children, any state; retro = +{bonus} for the {label} label."
+register_heads = { rank = "#", stone = "stone", id = "issue", title = "title", project = "project", done = "completed", kind = "kind", mentions = "mentions", subs = "sub-issues", retro = "retro", weight = "weight" }
+register_foot = "Further down the register: {n} cairns of weight {lo}–{hi} ({retro} retros, {mention} mention targets, {parent} small parent trees). "
+single_mention = "No cairn is named by more than one later title: all {targets} mention targets carry a single mention, so the heavy cairns are all sub-issue trees."
+most_mention = "The most-named issue is named by {most} later titles."
+source = "Source: Linear snapshot {snapshot:%Y-%m-%d}; analyses/linear-expedition outputs (cairns, index_project, index_range). Traffic = completed non-template issues. A title mention counts only when the mentioning issue was created after the cairn."
