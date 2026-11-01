@@ -11,7 +11,6 @@ Outputs (in outputs/): assignments.parquet, metrics.json, universe.png, run_conf
 checks.enabled = true adds the validation suite (checks.py) to metrics.json; it takes minutes.
 """
 
-import importlib.util
 import json
 import re
 from pathlib import Path
@@ -21,6 +20,7 @@ import pandas as pd
 from scipy import sparse
 from sklearn.preprocessing import normalize
 
+from analytics.cli import sibling
 from analytics.config import save_run_config
 from analytics.features import graph, text
 from analytics.sources.linear import load_issues
@@ -231,20 +231,10 @@ def cohesion(X, planet):
     return pd.Series(out)
 
 
-def sibling(name):
-    """Import a module next to this file (the CLI loads run.py by path, not as a package)."""
-    spec = importlib.util.spec_from_file_location(
-        f"linear_universe_{name}", Path(__file__).with_name(f"{name}.py")
-    )
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
 def main(cfg: dict) -> None:
     out_dir = Path(cfg["paths"]["outputs"])
     out_dir.mkdir(parents=True, exist_ok=True)
-    checks = sibling("checks")
+    checks = sibling(__file__, "checks")
     df, X, terms = load(cfg)
     layers = edge_layers(df, X, cfg["edges"])
     base, runs, sats = build(df, X, layers, cfg)
