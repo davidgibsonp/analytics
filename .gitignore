@@ -7,7 +7,7 @@ __pycache__/
 .ruff_cache/
 
 # Data and run outputs never enter git
-data/
+/data/
 analyses/*/outputs/
 scratch/*
 !scratch/README.md

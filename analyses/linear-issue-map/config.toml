@@ -1,0 +1,43 @@
+# linear-issue-map. Override any value per run: uv run analytics run linear-issue-map --set tfidf.min_df=3
+# Relative paths resolve against this folder.
+
+[paths]
+outputs = "outputs"              # git-ignored; copy chosen charts to figures/ to commit them
+
+[data]
+snapshot = "latest"              # data/raw/linear/issues/<snapshot>/; or a date, e.g. "2026-10-31"
+
+[filter]
+teams         = []               # team names or keys; empty = all
+status_types  = []               # e.g. ["completed", "started"]; empty = all
+created_after = ""               # ISO date; empty = no limit
+
+[random]
+seed = 42                        # for the random-position baseline plot
+
+[tfidf]
+text_fields  = ["title"]         # any columns: title, labels, project, milestone, team, status
+ngram_max    = 2
+min_df       = 2                 # a term must appear in at least this many issues
+max_df       = 1.0
+sublinear_tf = true
+stop_words   = "english"         # "" keeps stop words
+top_terms_n  = 5                 # per-issue top terms saved in the output
+
+[embed]
+method         = "tsne"          # "tsne" or "svd"
+svd_components = 50
+perplexity     = 30
+seed           = 42
+
+[cluster]
+method           = "hdbscan"     # "hdbscan", "kmeans" or "none"
+space            = "2d"          # "2d" (the plotted layout) or "lsa"
+min_cluster_size = 15
+k                = 12
+seed             = 42
+terms_n          = 3             # words used to name each cluster
+
+[plot]
+color_by       = "team"          # any categorical column; past 3 values fold into "Other"
+label_clusters = 10              # label the N largest clusters
