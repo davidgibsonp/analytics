@@ -21,6 +21,9 @@ embeddings = ["sentence-transformers>=3.0"]
 viz = ["plotly>=5.24"]
 # Graph communities (Louvain, modularity) for analyses/linear-universe. Install with: uv sync --extra graph
 graph = ["networkx>=3.3"]
+# Animated walkthroughs (ManimCE) for analyses/linear-universe-video. Install with: uv sync --extra video
+# Needs system Pango headers first (e.g. apt-get install -y libpango1.0-dev) and ffmpeg; no LaTeX needed.
+video = ["manim>=0.19"]
 
 [project.scripts]
 analytics = "analytics.cli:main"

@@ -9,6 +9,8 @@ __pycache__/
 # Data and run outputs never enter git
 /data/
 analyses/*/outputs/
+# manim's default output dir (Text caches) when a scene runs outside an analysis's run.py
+/media/
 scratch/*
 !scratch/README.md
 
