@@ -33,6 +33,10 @@ Every number on screen comes from `linear-universe`'s `metrics.json` and `assign
 - `figures/linear-universe-preview.mp4`: the whole video (4:35) as a 769 KB preview, 640 px wide at 10 fps.
   Captions are readable; the dots smear. Watch the full render for detail.
 - `figures/poster-{2,5,7,9}-*.png`: stills of the word map, the consensus, the universe and the ablation.
+- `podcast.txt`: an audio-only version for text-to-speech (~2,500 words, ~15-17 min). It describes the
+  visuals in words, spells numbers and acronyms for speech ("X Y Z", "T F I D F", "Loo-van", "Personal O S")
+  and has no markdown or symbols. It was fact-checked against the analysis outputs and reviewed for
+  listenability; only numbers in the linear-universe and linear-issue-map READMEs and metrics appear.
 - Full render: `outputs/linear-universe.mp4` (1280x720, 30 fps, ~19 MB, ~5 min to render on 4 CPUs),
   not committed.
 

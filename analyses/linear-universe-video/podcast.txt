@@ -1,97 +1,109 @@
 The Linear Universe. A tour of eleven hundred issues.
 
-Every to-do list tells a story, if you step back far enough. This episode is about stepping back from one particular list: a single person's Linear workspace, with one thousand, one hundred and forty-three issues in it. Some are work projects. Some are personal errands. And a surprising number were written not by a person at all, but by automations.
+Every to-do list tells a story, if you step back far enough. This episode is about stepping back from one particular list: a single person's workspace in Linear, the issue-tracking app, with eleven hundred and forty-three issues in it. Some are work projects. Some are personal errands. And a surprising number were written not by a person at all, but by automations.
 
 The question was simple. If you could see all of that work at once, what shape would it have? Where are the big areas of effort, what is quietly stalled, and what is brand new? The answer turned out to look less like a spreadsheet and more like a night sky. So that is how we will describe it: as a universe, with galaxies, planets, and moons.
 
 Let's start with the raw material.
 
-The workspace has three teams. The largest, called X Y Z, holds the professional work: eight hundred and thirty issues about projects, research, and systems. The second, called A B C, holds two hundred and sixty-five issues produced by automations: daily debriefs, digests, and items captured from voice notes and shortcuts. The third, called Main, holds forty-eight personal tasks, like errands and household admin.
+The workspace has three teams. The largest, called X Y Z, holds most of the project work: eight hundred and thirty issues about projects, research, and systems. The second, called ABC, holds two hundred and sixty-five issues produced by automations: daily debriefs, digests, and items captured from voice notes and shortcuts. The third, called Main, holds forty-eight personal tasks, like errands and household admin.
 
-Scatter all eleven hundred issues across a page at random, colored by team, and you get exactly what you would expect. A cloud. Lots of blue for work, a band of orange for automation, a sprinkle of green for personal. It tells you how much there is, and nothing about how it fits together.
+Scatter all of those issues across a page at random, and you get exactly what you would expect. A cloud. It tells you how much there is, and nothing about how it fits together.
 
 Step one: let the words speak.
 
-The first thing to try is reading the titles. A method called T F I D F turns each title into a list of word weights. A word scores high when it is common in this title but rare across all the others. So a word like braindump carries a lot of meaning, while a word that appears everywhere carries very little. Across the whole workspace, that gives about thirteen hundred and sixty distinctive words and word pairs.
+The first thing to try is reading the titles. A method called T F I D F turns each title into a list of word weights. A word scores high when it is common in this title but rare across all the others. So a word like brain dump carries a lot of meaning, while a word that appears everywhere carries very little. Across the whole workspace, that gives about thirteen hundred and seventy words and word pairs that appear in at least two titles.
 
 Then a technique called tee-snee squeezes those word lists down onto a flat map, placing issues with similar wording close together. On that map, twenty-five clusters appear. There is a group about testing an intake agent, a group about research and statistical significance, a group about a personal website, and so on.
 
-One shape stands out immediately: a perfect ring, off to one side. It is made of about a hundred and forty issues with nearly identical titles, all reading Debrief, followed by a date. The map cannot stack identical points on top of each other, so it spreads them into a circle. It looks dramatic, but it is an artifact of duplicates, not a discovery.
+One shape stands out immediately: a perfect ring, off to one side. It is made of about a hundred and forty issues with nearly identical titles, most of them reading Debrief, followed by a date. The map cannot stack identical points on top of each other, so it spreads them into a circle. It looks dramatic, but it is an artifact of duplicates, not a discovery.
 
-And the clusters are loose. Two hundred and eighty issues do not belong to any cluster at all, and ten titles share no word with any other title, so they cannot be placed on the map in the first place. A title like Tattoo, for example, has nothing to match against.
+And the clusters are loose. Two hundred and eighty issues do not belong to any cluster at all. And ten issues cannot be placed on the map in the first place, because none of their meaningful words appear in any other title. A title like Tattoo, for example, has nothing to match against.
 
-Here is the real problem with wording alone. Take the biggest project in the workspace, called my-system, with two hundred and thirty-two issues. You might expect it to form one neat cluster. Instead, its issues are scattered across twenty-one of the twenty-five clusters. Big projects talk about many different things, so their titles drift apart, even though the work clearly belongs together.
+Here is the real problem with wording alone. Take the biggest project in the workspace, called my system, with two hundred and thirty-two issues. You might expect it to form one neat cluster. Instead, its issues are scattered across twenty-one of the twenty-five clusters. Big projects talk about many different things, so their titles drift apart, even though the work clearly belongs together.
 
 Step two: connect the issues.
 
 Titles are only one signal. Linear also records which project an issue belongs to, which milestone it is part of, whether it is a sub-issue of a larger parent issue, and which code repository it is labeled with. Each of those is a kind of link between issues.
 
-So the next step builds a single graph. Every issue is a point, and six kinds of links connect them: similar title wording, the same project, the same milestone, a parent and its sub-issues, sibling sub-issues that share a parent, and the same repository label. Each kind of link gets a weight, and they all add up.
+So the next step builds a single network, which mathematicians call a graph. Every issue is a point, and six kinds of links connect them. Similar title wording. The same project. The same milestone. A parent and its sub-issues. Sibling sub-issues that share a parent. And the same repository label. Each kind of link gets a weight, and they all add up.
 
-Before running anything on that graph, one group gets set aside by rule: the automation output. Those debriefs and delegated items reference work all over the workspace, so they act like bridges between otherwise separate areas. Left in, they made the results unstable. Set aside, they become their own galaxy in the middle, and the rest of the graph settles down.
+One group gets set aside by rule before anything runs: the automation output. We will see why in a moment. Set aside, it becomes its own galaxy in the middle.
 
 Step three: find the galaxies.
 
-To find natural groups in a graph, the analysis uses an algorithm called Louvain. It repeatedly moves points between groups whenever that makes the groups more tightly connected inside than between. The catch is that Louvain starts from a random point, and different random starts can give different answers. With the automation items left in, runs could disagree substantially. On a scale where one means identical and zero means no better than chance, some single runs agreed with the overall picture at only about zero point six four.
+To find natural groups in a network, the analysis uses an algorithm called Loo-van. It repeatedly moves points from one group to another whenever that makes each group more tightly connected within itself than to the groups around it. The catch is that Loo-van works through the issues in a random order, and different random orders can give different answers.
 
-The fix was to ask for a consensus. Run Louvain thirteen times with different random starts, and only group two issues together if they ended up together in at least half of the runs. After that, every single run agrees with the consensus at about zero point nine nine, and every run finds the same eight galaxies.
+At first, the runs disagreed. On a scale where one means identical and zero means no better than chance, the worst single run agreed with the overall picture at only about zero point six four.
+
+Two things fixed it. The first was setting the automation items aside. Those debriefs and delegated items mention work all over the workspace, so they act like bridges between otherwise separate areas, and the groups kept tipping across them. The second was asking for a consensus: run Loo-van thirteen times with different random orders, and keep issues in the same group only if, on average, they ended up together in at least half of the runs. With both in place, a single run agrees with the consensus at about zero point nine nine on average, and never below zero point nine six, and every run finds eight galaxies.
 
 Step four: planets, and their names.
 
-Inside each galaxy, the same method runs again to find planets: tighter sub-topics within the larger area. There are forty-six of them in total.
+Inside each human galaxy, meaning everything except the automation hub, the same method runs again to find planets: tighter sub-topics within the larger area. That gives thirty-six planets. The automation hub's ten planets are set by rule instead: by template, and by which galaxy each item is about. That makes forty-six in total.
 
-Naming matters, because a planet called "AI, read, Gibson" means very little to anyone. So each planet is named by the first thing that fits from a list. First, a milestone, if at least forty percent of the planet's issues share one. Then a ritual label, like Cycle retros or Stack days. Then the project itself. Only if none of those fit does the name fall back to the most distinctive words in its titles. In the end, two thirds of the human issues sit in planets named with the owner's own words. And four planets that are loose grab-bags are honestly marked as mixed.
+Naming matters, because a planet labeled only with keywords, such as AI, read, and Gibson, means very little to anyone. So each planet is named by the first thing that fits from a list. First, a milestone, if at least forty percent of the planet's issues share one. Then a label for a recurring ritual, like Cycle retros or Reading list. Then the project itself. If none of those fit, the name falls back to the most distinctive words in its titles, and eight planets whose word lists still read poorly, like that one, were given a short hand-written name instead. In the end, two thirds of the human issues sit in planets named with the owner's own words. And four planets that are loose grab-bags are honestly marked as mixed.
 
 Now, the universe itself.
 
-Picture eight large circles. In the center sits the automation hub, called Capture and Automation. Around it, in a ring, sit seven human galaxies, arranged so that the most connected pairs are neighbors. Inside each galaxy, smaller circles are planets, sized by how many issues they hold. Inside each planet, every issue is a tiny dot, a moon. Filled dots are done, hollow rings are still open, and small gray dots were canceled. One important caution: the positions on this chart carry no meaning of their own. It is a diagram of membership, not a map of distance.
+Picture eight large circles. In the center sits the automation hub, called Capture and Automation. Around it, in a ring, sit seven human galaxies, arranged so that the most connected pairs are neighbors. Inside each galaxy, smaller circles are planets, sized by how many issues they hold. And inside each planet, almost every issue is a tiny dot, a moon. Only two issues, with no links of any kind, are left out.
 
-Let's take the tour.
+One important caution: beyond which galaxies sit next to each other, the positions in this picture carry no meaning of their own. It is a diagram of membership, not a map of distance.
 
-We start in the center, with Capture and Automation. Two hundred and fifty-four issues, and only two percent still open. Most of it is one template: a hundred and thirty-five issues, each titled Debrief, followed by a date, one per day since the sixteenth of June. Before that, there was an older template called Daily debrief, which stopped on the fourteenth of June. The rest are a hundred and three items captured and delegated by automations. Reading their titles, most of them are about the Personal OS galaxy, forty-nine of them, then eighteen about the day job, and sixteen about life and the game project. In other words, the automation mostly serves the system that runs it. About four in ten of those routings are low confidence, so treat that split as a sketch.
+Let's take the tour: eight stops, one for each galaxy.
 
-Next, Personal OS. This is the giant: three hundred and seventy-three issues across sixteen planets, about forty-two percent of all the human work. It holds the productivity system itself, its agents, its intake pipeline, and the developer experience around it. Its newest planet is camp, a workspace tool. Seventy-seven percent of camp's issues were created in the last thirty days, and twenty-three are still open. If there is an active frontier in this universe, camp is it.
+We start in the center, with Capture and Automation. Two hundred and fifty-four issues, and only two percent still open. Most of it is one template: a hundred and thirty-five issues, each titled Debrief, followed by a date, roughly one a day since the sixteenth of June. Before that, there was an older template called Daily debrief, which stopped on the fourteenth of June. Three more issues belong to the debrief pipeline itself. The remaining hundred and three are items captured and delegated by automations. Matching their titles against each galaxy's wording, the largest share, forty-nine of them, is about the Personal O S galaxy. Then eighteen are about the day job, and sixteen about life and the game project. In other words, the automation serves the system that runs it more than anything else. About four in ten of those matches are low confidence, so treat that split as a sketch.
 
-Expedition and Agents holds a hundred and twenty-four issues across four planets. It is the home of agent infrastructure work. Its largest planet, called expedition, is one of the mixed ones: seventy-nine issues that share a project but not much else.
+Next, Personal O S. This is the giant: three hundred and seventy-three issues across sixteen planets, about forty-two percent of all the human work. It holds the productivity system itself, its agents, its intake pipeline, and the developer experience around it. Its biggest new planet is camp, a workspace tool. Seventy-seven percent of camp's issues were created in the last thirty days, and twenty-three are still open. If there is an active frontier in this universe, camp is it.
 
-Stack, the day job, holds a hundred and twelve issues across five planets. Its planets include Stack days and team operations, a leadership transition, and a project called SOFA, which has twenty-four issues, three still open, and no new issue in about a hundred days.
+Expedition and Agents holds a hundred and twenty-four issues across four planets. It holds much of the workspace and agent tooling work. Its largest planet, called expedition, is one of the mixed ones: seventy-nine issues that share a project but not much else.
 
-Salley and Machines holds sixty-five issues across four planets. One of them is a stalled harness project: a milestone called v1, Compounding harness, with six of its ten issues still open and nothing new in a hundred and forty-three days. Its newest planet is machine, about managing computers as code, where most issues are less than a month old.
+Stack, the day job, has a hundred and twelve issues in five planets. Its planets include one for Stack days and team operations, one for a leadership transition, and one built around a milestone called Sofa. Sofa has twenty-four issues, three still open, and no new issue in about a hundred days.
 
-Career and Reading holds eighty issues, with the highest open share of any galaxy, forty-five percent. Its Reading list planet is the clearest example: fourteen issues, eleven still unread.
+Salley and Machines holds sixty-five issues across four planets. One is built around a milestone called V one, Compounding harness. Six of its ten issues are still open, and nothing new has been added in a hundred and forty-three days. Its newest planet, called machine, is about managing computers as code, and most of its issues are less than a month old.
 
-Life and Game holds seventy-six issues in two planets. It hangs together largely because of one big parent issue: nineteen of its seventy-six issues are sub-issues of a single parent, issue X Y Z seven twelve. It is also the most fragile galaxy: in one of the stability rebuilds, it dissolved into Personal OS.
+Career and Reading holds eighty issues, and the largest share of open work of any galaxy: forty-five percent. Its Reading list planet is a clear example: fourteen issues, eleven still open.
 
-And finally, Autoresearch, fifty-seven issues, with just sixteen percent open. It has one big planet, marked mixed, and one small one that split off around a milestone called F T two, a verified reproduction.
+Life and Game holds seventy-six issues in two planets. It hangs together largely because of one big parent issue, X Y Z seven twelve. Nineteen of those seventy-six issues are its sub-issues. It is also the most fragile galaxy: when the analysis was rebuilt from random samples of the issues, which we will come back to, it once merged into Personal O S.
 
-One more observation from the tour. The human galaxies barely touch each other. Across all seven, there are only seven sub-issue or cross-reference links between different galaxies. Each area of work is largely self-contained.
+And finally, Auto-research, fifty-seven issues, with just sixteen percent open. It has one big planet, marked mixed, and one small one that split off around a milestone called F T two, a verified reproduction.
+
+One more observation from the tour. The human galaxies barely touch each other. Across all seven, only a handful of links cross from one galaxy to another: seven in total, counting sub-issues and titles that mention another issue. Each area of work is largely self-contained.
 
 So what did each piece of data actually contribute?
 
 To answer that, the analysis drops one kind of link at a time, rebuilds the whole universe, and measures how much it changes, again on the scale where one means unchanged.
 
-Drop the project field, and everything changes. The galaxies score zero point two eight, and the planets zero point four two. Project is the backbone of this universe.
+Drop the project field, and the galaxies come out almost entirely different. They score zero point two eight, and the planets zero point four two. Project is the backbone of this universe.
 
-Drop the title wording, and galaxies hold at zero point eight two, but planets blur together, going from forty-six to thirty-nine. Wording is the second force.
+Drop the title wording, and galaxies hold at zero point eight two, but planets blur together, going from forty-six to thirty-nine. Wording is the second force for galaxies, though for planets, milestones matter more.
 
 Drop milestones, and the galaxies barely move, at zero point nine eight, but the planets drop to zero point five eight. Milestones carve the planets.
 
-Drop the parent and sub-issue links, and sub-issue trees fall apart. With them, ninety-seven percent of parent and child pairs share a planet. Without them, only fifty-eight percent do.
+Drop the parent and sub-issue links, and sub-issue trees fall apart. With those links, ninety-seven percent of parent and child pairs share a planet. Without them, only fifty-eight percent do.
 
-Repository labels and sibling links matter least, mostly fine-tuning the planets.
+Repository labels barely move the galaxies, at zero point nine six, but they reshape the planets about as much as wording does, at zero point seven five. Sibling links matter least.
 
-There was also an honest check. Two kinds of links were deliberately left out of the graph, so they could serve as a test. The first: issues created within five minutes of each other, which usually means they came out of the same working session. Eighty percent of those pairs landed in the same galaxy, compared with twenty-four percent for random pairs, and sixty percent landed on the same planet, compared with four percent. The structure holds up on evidence it never saw.
+There was also an honest check. Two kinds of links were deliberately left out of the network, so they could serve as a test.
+
+The first: issues created within five minutes of each other, which usually means they came out of the same working session. Eighty percent of those pairs landed in the same galaxy, compared with twenty-four percent for random pairs. And sixty percent landed on the same planet, compared with just four percent for random pairs.
+
+But most of those pairs share a project, which the network did see, so the fairer test is pairs from different projects. Even there, twenty-eight percent share a galaxy, against fifteen percent for random pairs, and twelve percent share a planet, against half a percent.
+
+The second kind of held-out link is a title that mentions another issue by its ID. Of the twenty-three such pairs among the human issues, seventy-four percent share a galaxy, and fifty-two percent share a planet.
+
+So the structure holds up on evidence it was not built from, though less dramatically once shared projects are set aside.
 
 A few caveats before we go.
 
 First, the galaxies are best read as project families, not as topics discovered from wording. That is what the experiment with dropping project shows.
 
-Second, some placements are judgement calls, and the chart marks them with dashed outlines. The camp project, for example, was pinned to Personal OS, because its titles are clearly about the camp tool rather than the day job, even though the graph slightly preferred the other way.
+Second, some placements are judgement calls, and the published chart marks them with dashed outlines. The camp project, for example, was pinned to Personal O S, because its titles are clearly about the camp tool rather than the day job. Judged by its links alone, the network would have put it with the day job, and Personal O S was not even its second choice.
 
-Third, the result is stable but not rigid. Rebuild it from a random ninety percent of the issues, and the galaxies still agree at somewhere between zero point seven eight and zero point nine six. The borders move a little. The cores do not.
+Third, the result is stable but not rigid. Rebuild it five times, each from a random ninety percent of the issues, and the galaxies still agree at somewhere between zero point seven eight and zero point nine six. The borders move, and in two of the five rebuilds the count changed: once to seven galaxies, when Life and Game merged into Personal O S, and once to nine. Most of the structure survives.
 
-And one note on how this was made. Most of the work was done by teams of AI agents. Three agents measured which fields carried structure. Three more each built a competing version of the universe, and two judges scored them. The graph approach you just heard about won. Later, independent reviewer agents re-ran everything and caught real problems: arrowheads that rendered as blobs, labels sitting over the wrong planet, and a claim that the code was clean when it was not. The lesson there is a familiar one. Treat every report as a claim, and check it.
+And one note on how this was made. Much of the work was done by teams of AI agents. Three agents measured which fields carried structure. Three more each built a competing version of the universe, and two judges scored them. The network approach you just heard about won. Later, independent reviewer agents checked the work and caught real problems: drawing glitches, like arrows that rendered as blobs and labels sitting over the wrong planet, and a claim that the code passed its style checks when it did not. The lesson there is a familiar one. Treat every report as a claim, and check it.
 
-That is the Linear universe. Eight galaxies, forty-six planets, one thousand, one hundred and forty-three moons. A hub of automation in the middle, quietly feeding a Personal OS that is nearly half of everything. A frontier being built right now around camp. And a handful of planets that have gone quiet, with open work still waiting on them.
+That is the Linear universe. Eight galaxies, forty-six planets, and eleven hundred and forty-three issues. A hub of automation in the middle, quietly feeding a Personal O S that holds over two fifths of the human work. A frontier being built right now around camp. And a handful of planets that have gone quiet, with open work still waiting on them.
 
 Thanks for listening.
