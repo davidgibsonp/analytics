@@ -1,0 +1,153 @@
+# linear-universe-video. Override any value per run, e.g. one scene at low quality:
+#   uv run --extra graph --extra video analytics run linear-universe-video \
+#     --set 'render.scenes=["S1Cloud"]' --set render.quality=low_quality --set render.concat=false
+# Relative paths resolve against this folder. Reads linear-universe and linear-issue-map outputs (run those first).
+
+[paths]
+outputs         = "outputs"                              # git-ignored: video_data.json, scenes/, posters/, the mp4
+universe        = "../linear-universe/outputs"           # assignments.parquet, metrics.json, run_config.json
+universe_config = "../linear-universe/config.toml"       # its pipeline is reused for S4 edges and S5 seeds
+universe_readme = "../linear-universe/README.md"         # numbers allowed on screen come from here ...
+issue_map       = "../linear-issue-map/outputs"          # issues.parquet (random + t-SNE positions, clusters), run_config.json
+issue_map_readme = "../linear-issue-map/README.md"       # ... and here, metrics.json and the data itself
+lessons         = "../../docs/lessons.md"
+
+[export]
+mode = "auto"        # "auto": rebuild video_data.json when missing or older than its inputs; "always"; "never"
+
+[render]
+quality      = "high_quality"   # manim preset: low_quality (-ql, 854x480 15 fps), medium_quality (-qm, 1280x720 30 fps),
+                                # high_quality (-qh, 1920x1080 60 fps), production_quality (2560x1440 60 fps)
+pixel_width  = 0                # 0 = the preset's resolution
+pixel_height = 0
+fps          = 30               # 0 = the preset's frame rate
+scenes       = []               # scene classes to render; empty = every scene in [scenes].order
+concat       = true             # join the rendered scenes (in [scenes].order) into output
+posters      = true             # one PNG per rendered scene in outputs/posters/, plus outputs/poster.png
+output       = "linear-universe.mp4"
+progress_bar = "none"           # manim: "display", "leave" or "none"
+verbosity    = "WARNING"
+
+[scenes]
+order = ["S1Cloud", "S2WordsToMap", "S3WordingNotEnough", "S4Graph", "S5HubCommunities",
+         "S6PlanetsNames", "S7Universe", "S8Tour", "S9Ablation", "S10Close"]
+
+[durations]   # target seconds per scene; VideoScene.finish() pads a scene up to its target
+S1Cloud            = 15
+S2WordsToMap       = 35
+S3WordingNotEnough = 20
+S4Graph            = 35
+S5HubCommunities   = 35
+S6PlanetsNames     = 25
+S7Universe         = 30
+S8Tour             = 50
+S9Ablation         = 20
+S10Close           = 10
+
+[posters]
+at   = 0.97          # poster frame at this share of each scene's length
+main = "S7Universe"  # outputs/poster.png comes from this scene
+
+[frame]   # manim frame units: 16:9, height 8, origin at the centre, y up
+width          = 14.222
+height         = 8.0
+caption_y      = -3.45                      # centre of the bottom caption band: keep other content above y = -2.9
+caption_width  = 12.6                       # captions wrap to this width
+kicker_xy      = [-6.75, 3.65]              # top-left scene label
+# Boxes [centre x, centre y, width, height] each layout is fitted into (aspect kept, except random)
+random_box     = [0.0, 0.25, 13.2, 5.6]
+tsne_box       = [0.0, 0.25, 12.8, 5.6]
+universe_box   = [0.0, 0.3, 13.4, 6.2]      # y -2.8..3.4: clear of the caption band, room for top names
+graph_box      = [1.6, 0.3, 10.4, 5.8]      # S5: spring layout of the human-issue graph (hub items not in it)
+graph_clip     = 0.01                       # the graph box fits the 1-99% extent; outliers are clipped to it
+hub_ring       = [-5.2, 0.3, 0.5, 1.1]      # S5: hub issues set aside in a belt: centre x, y, inner and outer radius
+s4_box         = [-1.6, 0.35, 9.6, 5.4]     # S4: the readable subset (legend goes on the right)
+
+[style]
+background = "#1a1a19"
+ink        = "#f0efec"    # primary text
+ink2       = "#c3c2b7"    # secondary text
+muted      = "#898781"    # canceled/duplicate moons, unplaced dots, axis-like marks
+grid       = "#2c2c2a"    # hairlines
+baseline   = "#383835"
+# Galaxy hues: the palette's dark-mode steps in the universe chart's order (galaxy_id 0..7, hub = 7)
+hues       = ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#e66767"]
+team_order = ["XYZ", "ABC", "MaiN"]   # S1 team hues = hues[0..2] in this order (as linear-issue-map's chart)
+font       = "Inter"
+mono       = "JetBrains Mono"
+title_size   = 56
+subtitle_size = 34
+caption_size = 30         # >= 28 for 720p
+label_size   = 22         # >= 20 for 720p
+small_size   = 20
+kicker_size  = 22
+dot_radius   = 0.045      # cloud / t-SNE dots (frame units)
+hollow_stroke = 1.6       # stroke width of hollow (open) dots
+dropped_scale = 0.74      # canceled/duplicate moons are this much smaller (area 0.55, as the chart)
+disc_fill    = 0.06       # galaxy disc fill opacity
+disc_stroke  = 0.55       # galaxy disc outline opacity
+planet_fill  = 0.13       # planet disc fill opacity
+dim_opacity  = 0.15       # opacity of dots pushed to the background
+color_levels = 12         # swarm color transitions are drawn in this many steps
+strict_numbers = true     # caption()/title_card() raise on a number not in metrics.json, the READMEs or the data
+
+[s2]   # words -> map
+example_ids = ["XYZ-850", "XYZ-360", "ABC-285"]   # titles shown with their top TF-IDF terms (the last: a debrief template)
+terms_n     = 4
+
+[s3]
+project = "my-system"     # the big project whose issues scatter across text clusters
+
+[s4]   # the graph, on a small readable subset
+projects   = ["salley", "machine"]
+layers     = ["text_knn", "project", "milestone", "parent", "sibling", "repo"]   # reveal order
+layer_names = { text_knn = "title-text neighbours", project = "same project", milestone = "same milestone", parent = "parent / sub-issue", sibling = "siblings (same parent)", repo = "same repo label" }
+text_top_k = 2           # text edges drawn per issue (display set; all pairs are exported too)
+length_power = 0.5       # Kamada-Kawai edge length = 1 / combined weight ** this
+title_chars = 34         # short titles for node labels
+
+[s5]
+seeds = [7, 1, 0]        # single Louvain seeds shown before the consensus (their ARI is in metrics.json)
+graph_seed = 0           # spring layout of the human-issue graph
+graph_iterations = 60    # spring layout of the 889 human issues, ~3 s
+
+[s6]
+galaxy = "Stack (day job)"
+
+[universe]
+moon_scale = 1.0         # moon radius = this x the chart's moon size, in frame units after the fit
+
+[tour]   # S8: camera stops in ring order, each with one story (numbers must be in metrics.json or the README)
+order   = ["Personal OS", "Salley & machines", "Autoresearch", "Life & game", "Career & reading",
+           "Stack (day job)", "Expedition & agents", "Capture & automation"]
+margin       = 1.15      # camera frame height = this x the galaxy diameter ...
+caption_room = 0.22      # ... plus this share of the view kept free at the bottom for the caption
+min_width    = 3.2       # never zoom tighter than this frame width
+[tour.story]
+"Personal OS"          = "42% of human work: 373 of 889 issues in 16 planets"
+"Salley & machines"    = "Stalled: v1 — Compounding harness, 6 of 10 open, idle 143 days"
+"Autoresearch"         = "Its milestone FT2 — Verified reproduction split off as its own planet"
+"Life & game"          = "Held together by one tree: 19 of its 76 issues are sub-issues of XYZ-712"
+"Career & reading"     = "Reading list: 11 of 14 still open"
+"Stack (day job)"      = "SOFA stalled: 24 issues, 3 open, nothing new in 102 days"
+"Expedition & agents"  = "One big (mixed) planet: 79 expedition issues with no milestone or sub-issue tree to split them"
+"Capture & automation" = "135 Debrief – <date> template issues, plus delegated items routed to the galaxy they are about"
+[tour.focus]   # planets to highlight at each stop; "children:<id>" highlights a sub-issue tree
+"Personal OS"          = []
+"Salley & machines"    = ["v1 — Compounding harness"]
+"Autoresearch"         = ["FT2 — Verified reproduction"]
+"Life & game"          = ["children:XYZ-712"]
+"Career & reading"     = ["Reading list"]
+"Stack (day job)"      = ["SOFA"]
+"Expedition & agents"  = ["expedition (mixed)"]
+"Capture & automation" = ["Debrief – <date> template"]
+
+[ablation]   # S9 rows, in README order: metrics.json checks.ablation key -> label
+rows = [["drop_project", "project"], ["drop_text_knn", "title text"], ["drop_parent", "parent (sub-issues)"],
+        ["drop_milestone", "milestone"], ["drop_repo", "repo label"], ["drop_sibling", "sibling"]]
+
+[text]
+title     = "1,143 Linear issues"
+thesis    = "Tie titles together with projects, milestones and sub-issue links, and they form 8 galaxies around an automation hub."
+close     = ["Galaxies are project families.", "Positions carry no meaning.", "Dashed outline = a judgement call."]
+rerun     = "uv run --extra graph analytics run linear-universe"

@@ -68,6 +68,23 @@ to it when something costs you time.
   `analytics.cli`.
 - **Give agents the facts you already have** (counts, known quirks) so they build on them instead of
   re-deriving; give each a separate `scratch/<folder>/` so parallel agents don't collide.
+- **Parallelism is capped by the container's CPUs** (min(16, CPUs − 2)): on this 4-CPU container only two
+  agents ran at once, so the third scene group of the video waited for the first two. Plan wall-clock time
+  with that in mind, or give fewer, larger units of work.
+- **Design workflows to be stoppable.** The video workflow was time-boxed and stopped mid-assembly, before
+  its review and fix stages. It was still recoverable in minutes because each scene agent had written a
+  self-contained module with "paste from here / until here" markers and no name collisions, and had
+  rendered its own drafts. Ask stage outputs to be usable on their own, not only by the next stage.
+
+### Video (ManimCE)
+
+- **Precompute everything in `run.py`, choreograph in `scenes.py`.** Exporting every layout already mapped
+  to Manim frame coordinates (`video_data.json`) let three scene agents work in parallel from one data
+  contract, and keeps every on-screen number traceable to the analysis outputs.
+- **Render at `-ql` while iterating and look at extracted frames** (`ffmpeg -ss <t> -i video.mp4 -frames:v 1`)
+  — mid-transition frames are where overlaps hide. A 15 s scene with 1,143 dots renders in ~35 s at 720p30.
+- **A video is a lot of choreography code** (~2,100 lines for ten scenes); none of it was reusable yet, so it
+  stays in the analysis's one sibling module.
 
 ### Charts
 
