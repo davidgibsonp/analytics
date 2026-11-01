@@ -1,4 +1,5 @@
-"""Layout geometry: greedy circle packing and spreading angles apart."""
+"""Layout geometry: greedy circle packing, spreading angles or positions apart, and the segment and
+box tests label placers use (boxes are (x0, y0, x1, y1) in pixels)."""
 
 from __future__ import annotations
 
@@ -50,3 +51,63 @@ def spread(phi: np.ndarray, half: np.ndarray, max_iter: int = 500) -> np.ndarray
         if not moved:
             return phi
     return phi
+
+
+def dodge(x, half, gap: float = 0.0) -> np.ndarray:
+    """1D spread: positions near x whose neighbours are at least half_i + half_j + gap apart. Items
+    that would touch form a block, centred on the mean of their wanted positions."""
+    x, half = np.asarray(x, float), np.asarray(half, float)
+
+    def offsets(idx):
+        return np.r_[0, np.cumsum([half[a] + half[b] + gap for a, b in zip(idx, idx[1:], strict=False)])]
+
+    blocks = []  # [indices, start]
+    for i in np.argsort(x, kind="stable"):
+        blocks.append([[i], x[i]])
+        while True:
+            idx = blocks[-1][0]
+            blocks[-1][1] = np.mean(x[idx] - offsets(idx))
+            if len(blocks) < 2:
+                break
+            pidx, pstart = blocks[-2]
+            if pstart + offsets(pidx)[-1] + half[pidx[-1]] + half[idx[0]] + gap <= blocks[-1][1]:
+                break
+            blocks[-2][0] = pidx + idx
+            blocks.pop()
+    pos = np.empty(len(x))
+    for idx, start in blocks:
+        pos[idx] = start + offsets(idx)
+    return pos
+
+
+def crosses(a, b, c, d) -> bool:
+    """Do segments ab and cd cross properly (touching or sharing an end point does not count)?"""
+
+    def side(p, q, r):
+        return np.sign((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]))
+
+    return side(a, b, c) * side(a, b, d) < 0 and side(c, d, a) * side(c, d, b) < 0
+
+
+def cuts(box, a, b) -> bool:
+    """Does segment ab cross an edge of box (x0, y0, x1, y1)?"""
+    x0, y0, x1, y1 = box
+    corners = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
+    return any(crosses(a, b, p, q) for p, q in zip(corners, corners[1:] + corners[:1], strict=True))
+
+
+def segment_in_box(box, a, b) -> bool:
+    """Does segment ab touch box (x0, y0, x1, y1): cross an edge or have an end point inside?"""
+    x0, y0, x1, y1 = box
+    inside = any(x0 <= p[0] <= x1 and y0 <= p[1] <= y1 for p in (a, b))
+    return inside or cuts(box, a, b)
+
+
+def overlap(a, b) -> float:
+    """Overlap area of two boxes (x0, y0, x1, y1); 0 when they are apart."""
+    return max(min(a[2], b[2]) - max(a[0], b[0]), 0) * max(min(a[3], b[3]) - max(a[1], b[1]), 0)
+
+
+def nearest_on_box(p, box) -> np.ndarray:
+    """The point of box (x0, y0, x1, y1) nearest to p (p itself when inside)."""
+    return np.array([np.clip(p[0], box[0], box[2]), np.clip(p[1], box[1], box[3])])

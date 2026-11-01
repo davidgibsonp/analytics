@@ -58,10 +58,19 @@ def cmd_run(args: argparse.Namespace) -> None:
         cfg = load_config(args.config or folder / "config.toml", args.set)
     except ValueError as e:
         sys.exit(str(e))
-    spec = importlib.util.spec_from_file_location(f"analyses.{args.name}.run", folder / "run.py")
+    sibling(folder / "run.py", "run").main(cfg)
+
+
+def sibling(path: Path | str, name: str):
+    """Import module `name` from the folder of `path` (an analysis's run.py: the CLI loads run.py by
+    file path, so it cannot import its sibling modules by name). Use: sibling(__file__, "checks")."""
+    path = Path(path)
+    spec = importlib.util.spec_from_file_location(
+        f"analyses.{path.parent.name}.{name}", path.with_name(f"{name}.py")
+    )
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    module.main(cfg)
+    return module
 
 
 def cmd_fetch(args: argparse.Namespace) -> None:

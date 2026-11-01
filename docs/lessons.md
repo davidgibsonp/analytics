@@ -63,9 +63,9 @@ to it when something costs you time.
 - **Port with an equivalence bar.** Moving scratch code into the repo was checked by issue id (0 galaxy and
   planet mismatches) and pixel-diffed charts. Compare string columns null-aware: `None`/`NaN`/`NA` render
   differently and look like mismatches. Don't compare outputs while a run is still rewriting them.
-- **An analysis can't plain-`import` its own sibling modules**: the CLI loads `run.py` by file path, so
-  `linear-universe` uses a small importlib helper. If a second analysis needs this, move a loader into
-  `analytics.cli`.
+- **An analysis can't plain-`import` its own sibling modules**: the CLI loads `run.py` by file path. Use
+  `analytics.cli.sibling(__file__, "checks")` (moved there when `linear-expedition` became the second
+  analysis to need it — the rule of two in practice).
 - **Give agents the facts you already have** (counts, known quirks) so they build on them instead of
   re-deriving; give each a separate `scratch/<folder>/` so parallel agents don't collide.
 - **Parallelism is capped by the container's CPUs** (min(16, CPUs − 2)): on this 4-CPU container only two
@@ -94,8 +94,30 @@ to it when something costs you time.
   1.1 MB at 150 dpi; palette quantization (`viz.style.optimize_png`) brings it well under without visible loss.
 - **Scatter colors stop at three** (the validated palette's all-pairs limit); fold the rest into "Other" or
   name every group in text, as the universe chart does.
+- **Check text against the canvas in code, not only by eye.** `viz.style.texts_outside` reports any text off
+  the canvas; longer, more accurate footnotes ran off the edge on first try and the check caught it.
+- **Test labels against real geometry.** Bounding boxes of diagonal lines (the 3D range brackets) are useless
+  obstacles: they pushed every label away. Test against the segment (`viz.pack.segment_in_box`).
+- **On a dense lane chart a label is about one lane tall**: grow the canvas rather than shrink the lanes to
+  make room for more text, or labels start landing on the neighbouring lane.
+- **Placement costs need graded margins**: a steep penalty for near-misses pushed a callout 215 px from its
+  tent. Charge near-misses lightly and true overlaps heavily.
+- **`matplotlib.colors.LightSource.hillshade` rescales to 0–1 over the whole image**, so flat ground isn't a
+  fixed shade and multiplying RGB greys the plain. Compute the shading yourself and move along the colour
+  ramp instead, which also keeps the terrain to one hue.
+- **Smoothing at an axis edge needs room**: reflect-mode smoothing folded the first week's mass back and cut
+  a peak flat at the start. Empty lead-in weeks (nothing existed yet) are truthful and fix it.
 
 ## Methods
+
+- **Count each link once, and check claims against both readings of a link.** A sub-issue whose title
+  names its parent was counted as a child and as a mention. "No issue is named twice" held among cairns
+  but not among all issues (three open issues are). The accuracy reviewer caught both.
+- **Tertile cut-offs over a handful of groups land on ties.** With 7 ranges, Stack's own values became both
+  cut-offs, so its "unmarked busy" flag is a tie. Report ties in the data (`on_*_cut` columns), not only in
+  prose.
+- **Don't seed agents with unverified "facts".** The brief for linear-expedition listed FT2 as stalled; it's
+  a completed milestone. The reviewer caught it, but the error came from the orchestrator.
 
 - **t-SNE spreads identical points into a ring.** The 135 near-identical debrief titles can't stack, so
   they form a circle. It's an artifact, not a shape in the data.
