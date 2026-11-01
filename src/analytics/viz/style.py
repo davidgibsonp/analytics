@@ -3,18 +3,28 @@
 Categorical colors are assigned in this fixed order and never cycled. Scatter-type charts
 (every pair of colors can sit side by side) are validated for the first three slots only:
 past three, fold the rest into "Other" (see fold_categories).
+
+Magnitude uses one hue light -> dark (SEQUENTIAL, by step); states use the reserved STATUS colors,
+never a series color, and always with an icon or label beside them.
 """
 
 from __future__ import annotations
 
+import logging
 import warnings
 from pathlib import Path
 
 import matplotlib
+import matplotlib.text
 
 matplotlib.use("Agg")
+# The rc font list ends in DejaVu Sans as a glyph fallback; matplotlib warns that it has no semibold on
+# every semibold text, although Inter SemiBold is the face that renders. Keep real errors only.
+logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
 import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
+from matplotlib.colors import LinearSegmentedColormap  # noqa: E402
 from PIL import Image  # noqa: E402  (installed with matplotlib)
 
 SURFACE = "#fcfcfb"
@@ -25,6 +35,15 @@ OTHER = "#9a9893"
 
 CATEGORICAL = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"]
 SCATTER_MAX_CATEGORIES = 3
+
+BASELINE = "#c3c2b7"  # axis and baseline ink
+HAIRLINE = "#e1e0d9"  # hairline gridlines, cut faces
+# Sequential blue, light -> dark (validated steps 100-700). 25 and 50 are surface tints below the
+# validated ramp, only for "near zero" (a floor, the lowest band), never for a discrete mark.
+SEQUENTIAL = {25: "#eef3f9", 50: "#e6f0fc", 100: "#cde2fb", 150: "#b7d3f6", 200: "#9ec5f4"}
+SEQUENTIAL |= {250: "#86b6ef", 300: "#6da7ec", 350: "#5598e7", 400: "#3987e5", 450: "#2a78d6"}
+SEQUENTIAL |= {500: "#256abf", 550: "#1c5cab", 600: "#184f95", 650: "#104281", 700: "#0d366b"}
+STATUS = {"good": "#0ca30c", "warning": "#fab219", "serious": "#ec835a", "critical": "#d03b3b"}
 
 
 def fold_categories(
@@ -37,6 +56,14 @@ def fold_categories(
         return values, order
     keep = order[:max_categories]
     return values.where(values.isin(keep), other), [*keep, other]
+
+
+def sequential_cmap(steps, at=None, name: str = "sequential"):
+    """A continuous colormap through these SEQUENTIAL steps (evenly spaced, or at the given 0-1 stops)."""
+    at = np.linspace(0, 1, len(steps)) if at is None else at
+    return LinearSegmentedColormap.from_list(
+        name, [(a, SEQUENTIAL[s]) for a, s in zip(at, steps, strict=True)]
+    )
 
 
 def new_figure(width: float = 12, height: float = 9, dpi: int = 150):
@@ -69,6 +96,19 @@ def finish(fig, ax, title: str, xlabel: str, ylabel: str, path, legend_columns: 
     fig.tight_layout()
     fig.savefig(path, facecolor=SURFACE)
     plt.close(fig)
+
+
+def texts_outside(fig) -> list[str]:
+    """Texts (first 40 characters) that run off the canvas: a check to run before saving a chart."""
+    fig.canvas.draw()
+    r, W, H = fig.canvas.get_renderer(), fig.bbox.width, fig.bbox.height
+    out = []
+    for t in fig.findobj(matplotlib.text.Text):
+        if t.get_visible() and t.get_text().strip():
+            b = t.get_window_extent(r)
+            if b.width and (b.x0 < 0 or b.y0 < 0 or b.x1 > W or b.y1 > H):
+                out.append(t.get_text()[:40])
+    return out
 
 
 def optimize_png(path, max_kb: int = 1000) -> float:
