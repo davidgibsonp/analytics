@@ -30,9 +30,11 @@ Every number on screen comes from `linear-universe`'s `metrics.json` and `assign
 
 ## Evidence
 
-- `figures/linear-universe-preview.mp4`: compressed 480p preview of the whole video (committed when small).
-- `figures/poster-*.png`: one still per key scene.
-- Full-quality render (720p30): `outputs/linear-universe.mp4` after a rerun (not committed).
+- `figures/linear-universe-preview.mp4`: the whole video (4:35) as a 769 KB preview, 640 px wide at 10 fps.
+  Captions are readable; the dots smear. Watch the full render for detail.
+- `figures/poster-{2,5,7,9}-*.png`: stills of the word map, the consensus, the universe and the ablation.
+- Full render: `outputs/linear-universe.mp4` (1280x720, 30 fps, ~19 MB, ~5 min to render on 4 CPUs),
+  not committed.
 
 ## Method
 
@@ -65,9 +67,10 @@ uv sync --extra graph --extra video
 uv run --extra graph analytics run linear-universe         # the data the video reads
 uv run analytics run linear-issue-map
 uv run --extra graph --extra video analytics run linear-universe-video --set render.quality=medium_quality
-# 480p preview for the repo:
-ffmpeg -y -i analyses/linear-universe-video/outputs/linear-universe.mp4 -vf scale=854:-2 -c:v libx264 \
-  -crf 32 -preset slow -an analyses/linear-universe-video/figures/linear-universe-preview.mp4
+# preview for the repo (must stay under the 1,000 KB pre-commit limit; 480p was 1.5 MB even at crf 38):
+ffmpeg -y -i analyses/linear-universe-video/outputs/linear-universe.mp4 -vf scale=640:-2,fps=10 -c:v libx264 \
+  -crf 40 -preset veryslow -tune animation -pix_fmt yuv420p -an -movflags +faststart \
+  analyses/linear-universe-video/figures/linear-universe-preview.mp4
 ```
 
 `render.quality` defaults to `high_quality` (1080p); `medium_quality` (720p30) is faster. One scene can be

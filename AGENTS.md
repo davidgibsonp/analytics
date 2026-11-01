@@ -25,7 +25,7 @@ readable code over new code.
   (git-ignored).
 - **No data or secrets in git; images only.** Raw snapshots live in `data/` and run outputs in
   `analyses/*/outputs/` (both git-ignored). The only results committed are chart images in
-  `analyses/*/figures/`. Never commit parquet, csv, npz, pickles or API dumps; the one exception
+  `analyses/*/figures/` (and, for a video analysis, one preview `.mp4` under 1,000 KB). Never commit parquet, csv, npz, pickles or API dumps; the one exception
   is tiny synthetic fixtures in `tests/fixtures/`. Keys come from the environment (`.env.example`
   lists the names).
 - **No new dependencies without asking the user.** Heavy ones go in an optional extra.
